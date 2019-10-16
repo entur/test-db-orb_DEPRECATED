@@ -2,18 +2,18 @@ version: 2.1
 
 #Include this in your config.yml
 #orbs:
-#  db-test: entur/db-test@dev:refactor-db-test # Use volatile if you always want the newest version.
+#  test-db: entur/test-db@dev:refactor-test-db # Use volatile if you always want the newest version.
 
 #executors:
-#  entur-cci-toolbox: db-test/entur-cci-toolbox
+#  entur-cci-toolbox: test-db/entur-cci-toolbox
 
 jobs:
-  test-db-test-orb:
+  test-test-db-orb:
     #executor: entur-cci-toolbox
     machine: true
     steps:
       - checkout
-      - db-test/mysql-start:
+      - test-db/mysql-start:
           mysql-version: 8
           sql-file: ./test/all_db.sql
           database-name: testdb
@@ -28,5 +28,5 @@ workflows:
   version: 2.1
   main:
     jobs:
-      - test-db-test-orb:
+      - test-test-db-orb:
           name: build #must be called build for the test to be run
