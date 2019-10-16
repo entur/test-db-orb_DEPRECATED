@@ -1,0 +1,60 @@
+description: |
+  Builds and starts a database ready for testing.
+
+parameters:
+  mysql-version:
+    description: Select a valid MySQL version, i.e "5", "8.0" or "8.0.18" 
+    type: string
+  sql-file:
+    description: Path to SQL file
+    type: string
+  ## -- Authentication --
+  database-name:
+    description: The name of the database
+    type: string
+  mysql-user:
+    description: The user of the database
+    type: string
+  mysql-password:
+    description: The password for the user of the databsae
+    type: string
+  root-password:
+    description: The Root password
+    type: string
+  ## -- Defaults --
+  port:
+    description: The port on which this server will be accessible
+    type: string
+    default: "3306"
+  server-name:
+    description: The name of the server
+    type: string
+    default: "test-db"
+
+steps:
+  - setup_remote_docker:
+      docker_layer_caching: true  # default - false  
+  - checkout
+  - run:
+      name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
+      command: |
+        cp << parameters.sql-file >> {{ checksum "<< parameters.sql-file >>" }}.sql
+  - run:
+      name: Build Dockerfile
+      command: |
+        touch tmp_mysql_start.Dockerfile
+        echo 'FROM mysql:<< parameters.mysql-version >> as builder' >> tmp_mysql_start.Dockerfile
+        echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> tmp_mysql_start.Dockerfile
+        echo 'ENV MYSQL_ROOT_PASSWORD=<< parameters.root-password >>' >> tmp_mysql_start.Dockerfile
+        echo 'ENV MYSQL_DATABASE=<< parameters.database-name >>' >> tmp_mysql_start.Dockerfile
+        echo 'ENV MYSQL_USER=<< parameters.mysql-user >>' >> tmp_mysql_start.Dockerfile
+        echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> tmp_mysql_start.Dockerfile
+        echo 'COPY {{ checksum "<< parameters.sql-file >>" }}.sql /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
+        echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> tmp_mysql_start.Dockerfile
+        echo 'FROM mysql:<< parameters.mysql-version >>' >> tmp_mysql_start.Dockerfile
+        echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> tmp_mysql_start.Dockerfile
+        cat tmp_mysql_start.Dockerfile
+        echo 'export TEST_DB_DOCKER_NAME=db-test-mysql-${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BRANCH}' >> $BASH_ENV
+        source $BASH_ENV
+        docker build -t ${TEST_DB_DOCKER_NAME} -f tmp_mysql_start.Dockerfile
+        docker run -d -p << parameters.port >>:3306 --name << parameters.server-name >> -e MYSQL_ROOT_PASSWORD=<< parameters.root-password >> ${TEST_DB_DOCKER_NAME}

@@ -1,0 +1,32 @@
+version: 2.1
+
+#Include this in your config.yml
+#orbs:
+#  db-test: entur/db-test@dev:refactor-db-test # Use volatile if you always want the newest version.
+
+#executors:
+#  entur-cci-toolbox: db-test/entur-cci-toolbox
+
+jobs:
+  test-db-test-orb:
+    #executor: entur-cci-toolbox
+    machine: true
+    steps:
+      - checkout
+      - db-test/mysql-start:
+          mysql-version: 8
+          sql-file: ./test/all_db.sql
+          database-name: testdb
+          mysql-user: dbuser
+          mysql-password: dbpword
+          root-password: root
+          server-name: test-db
+      - run: echo $TEST_DB_DOCKER_NAME
+      - run: docker run --rm mysql-client mysql --host=test-db --user=root --password=root --database=testdb --execute='show tables;'
+
+workflows:
+  version: 2.1
+  main:
+    jobs:
+      - test-db-test-orb:
+          name: build #must be called build for the test to be run
