@@ -11,7 +11,7 @@ jobs:
   test-test-db-orb:
     #executor: entur-cci-toolbox
     docker:
-      - image: alpine
+      - image: circleci/buildpack-deps
     steps:
       - checkout
       - test-db/mysql-start:
