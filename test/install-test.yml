@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - test-db/mysql-start:
-          mysql-version: 8
+          mysql-version: "8"
           sql-file: ./test/all_db.sql
           database-name: testdb
           mysql-user: dbuser
