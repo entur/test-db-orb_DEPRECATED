@@ -3,7 +3,7 @@ description: |
 
 parameters:
   mysql-version:
-    description: Select a valid MySQL version, i.e "5", "8.0" or "8.0.18" 
+    description: Select a valid MySQL version, i.e "5", "8.0" or "8.0.18"
     type: string
   sql-file:
     description: Path to SQL file
@@ -33,7 +33,7 @@ parameters:
 
 steps:
   - setup_remote_docker:
-      docker_layer_caching: true  # default - false  
+      docker_layer_caching: true
   - checkout
   - run:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
