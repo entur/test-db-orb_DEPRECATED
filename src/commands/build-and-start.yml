@@ -1,0 +1,37 @@
+description: |
+  Builds and starts a database ready for testing.
+
+parameters:
+  os:
+    description: Select a database to start. Must be one of "postgresql", "mysql", "cassandra".
+    default: "linux"
+    type: enum
+    enum: ["postgresql", "mysql", "cassandra"]
+
+steps:
+  - run:
+      name: Authenticate Service Account to Google Cloud Platform
+      command: |
+        if ! which gcloud > /dev/null; then
+          echo "gcloud is not installed. Please run this command with a executor that supports gcloud."
+          exit 1
+        fi
+
+        if [[ -n $(gcloud auth list --format="value(account)") ]]; then
+            echo "Client is already authenticated to Google Cloud Platform. Skipping authentication."
+            exit 0
+        fi
+
+        CREDENTIALS="<< parameters.gcp-service-key >>"
+        if [[ -n "${CREDENTIALS}" ]]; then
+          echo "Using credentials provided in parameters."
+        elif [[ -n "${GCLOUD_SERVICE_KEY}" ]]; then
+          echo "Using credentials from environment."
+          CREDENTIALS="${GCLOUD_SERVICE_KEY}"
+        else
+          echo "No credentials were found. Looked in parameter gcp-service-key and environment GCLOUD_SERVICE_KEY."
+          exit 1
+        fi
+
+        echo ${CREDENTIALS} > ${HOME}/account-auth.json
+        gcloud auth activate-service-account --key-file ${HOME}/account-auth.json

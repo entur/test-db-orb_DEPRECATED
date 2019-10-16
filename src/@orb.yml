@@ -1,0 +1,12 @@
+version: 2.1
+
+description: |
+  An orb for setting up test databases
+  Made for Entur AS.
+  Project homepage: https://github.com/entur/test-db-orb
+
+executors:
+  entur-cci-toolbox:
+    docker:
+      # Entur CCI-toolbox has gcloud & rsync pre-installed.
+      - image: entur/cci-toolbox:2.1

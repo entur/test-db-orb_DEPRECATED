@@ -1,0 +1,78 @@
+version: 2.1
+
+orbs:
+  orb-tools: circleci/orb-tools@8.27.4
+
+workflows:
+  verify:
+    jobs:
+      - orb-tools/lint:
+          name: lint
+      - orb-tools/pack:
+          name: pack
+          source-dir: src
+          attach-workspace: true
+      - orb-tools/test-in-builds:
+          name: test
+          orb-location: orb.yml
+          orb-name: test-db
+          attach-workspace: true
+          context: dev
+          checkout: true
+          workspace-root: .
+          test-steps: # these happen after the initial test-in-builds
+            - run:
+                name: Update PATH and Define Environment Variable at Runtime
+                command: |
+                  echo 'export CLOUDSDK_CONTAINER_CLUSTER=${CLOUDSDK_CONTAINER_CLUSTER}' >> $BASH_ENV
+                  echo 'export GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}' >> $BASH_ENV
+                  echo 'export CLOUDSDK_COMPUTE_ZONE=${CLOUDSDK_COMPUTE_ZONE}' >> $BASH_ENV
+                  source $BASH_ENV
+                  echo ${BASH_ENV}
+            # from https://circleci.com/orbs/registry/orb/circleci/orb-tools#commands-local-test-build
+            - run: mkdir -p tmp-config-src
+            - run: cp test/install-test.yml tmp-config-src/config.yml
+            - orb-tools/pack:
+                destination: uncompiled-config.yml
+                source: tmp-config-src
+            - run: cat uncompiled-config.yml
+            - run:
+                command: circleci config process uncompiled-config.yml > config.yml
+                name: compile test config
+            - run:
+                command: >-
+                  circleci local execute --env GCLOUD_SERVICE_KEY="${GCLOUD_SERVICE_KEY}" --env CLOUDSDK_CONTAINER_CLUSTER="${CLOUDSDK_CONTAINER_CLUSTER}" --env CLOUDSDK_COMPUTE_ZONE="${CLOUDSDK_COMPUTE_ZONE}" --env CLOUDSDK_CORE_PROJECT=${CLOUDSDK_CORE_PROJECT} -c config.yml | tee local_build_output.txt /dev/stderr |
+                  tail -n 1 | grep "Success"
+                name: run test job locally
+          requires:
+            # - publish
+            - lint
+            - pack
+      - orb-tools/publish:
+          name: publish
+          context: orb-publishing
+          filters:
+            branches:
+              ignore: master
+          checkout: false
+          attach-workspace: true
+          workspace-root: .
+          orb-path: orb.yml
+          orb-ref: entur/test-db@dev:$CIRCLE_BRANCH
+          requires:
+            - pack
+            - lint
+            - test
+      - orb-tools/increment:
+          name: release
+          context: orb-publishing
+          filters:
+            branches:
+              only: master
+          checkout: false
+          attach-workspace: true
+          orb-ref: entur/test-db
+          requires:
+            - lint
+            - pack
+            - test
