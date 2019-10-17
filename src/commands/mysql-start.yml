@@ -38,6 +38,7 @@ steps:
   - run:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
       command: |
+        cat '<< parameters.sql-file >>'
         echo $SQL_FILE_CHECKSUM
         cp '<< parameters.sql-file >>' '$SQL_FILE_CHECKSUM.sql'
       environment:
