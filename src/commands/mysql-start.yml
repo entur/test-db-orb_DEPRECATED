@@ -38,9 +38,10 @@ steps:
   - run:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
       command: |
+        echo $SQL_FILE_CHECKSUM
         cp '<< parameters.sql-file >>' '$SQL_FILE_CHECKSUM.sql'
       environment:
-        SQL_FILE_CHECKSUM: {{ checksum "<< parameters.sql-file >>" }}
+        SQL_FILE_CHECKSUM: "{{ checksum {{ workflow.parameters.sql-file }} }}"
   - run:
       name: Build Dockerfile
       command: |
@@ -62,4 +63,4 @@ steps:
         docker build -t ${TEST_DB_DOCKER_NAME} -f tmp_mysql_start.Dockerfile .
         docker run -d -p << parameters.port >>:3306 --name << parameters.server-name >> -e MYSQL_ROOT_PASSWORD=<< parameters.root-password >> ${TEST_DB_DOCKER_NAME}
       environment:
-        SQL_FILE_CHECKSUM: {{ checksum "<< parameters.sql-file >>" }}
+        SQL_FILE_CHECKSUM: "{{ checksum {{ workflow.parameters.sql-file }} }}"
