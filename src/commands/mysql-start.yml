@@ -38,7 +38,7 @@ steps:
   - run:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
       command: |
-        cp << parameters.sql-file >> {{ checksum "<< parameters.sql-file >>" }}.sql
+        cp '<< parameters.sql-file >>' '{{ checksum "<< parameters.sql-file >>" }}.sql'
   - run:
       name: Build Dockerfile
       command: |
@@ -49,7 +49,7 @@ steps:
         echo 'ENV MYSQL_DATABASE=<< parameters.database-name >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_USER=<< parameters.mysql-user >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> tmp_mysql_start.Dockerfile
-        echo 'COPY {{ checksum "<< parameters.sql-file >>" }}.sql /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
+        echo 'COPY "{{ checksum "<< parameters.sql-file >>" }}.sql" /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
         echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> tmp_mysql_start.Dockerfile
         echo 'FROM mysql:<< parameters.mysql-version >>' >> tmp_mysql_start.Dockerfile
         echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> tmp_mysql_start.Dockerfile
