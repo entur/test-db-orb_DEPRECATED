@@ -11,7 +11,6 @@ jobs:
   test-test-db-orb:
     docker:
       - image: entur/cci-toolbox:2.1
-    machine: true
     steps:
       - checkout
       - test-db/mysql-start:
