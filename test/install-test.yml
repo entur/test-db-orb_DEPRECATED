@@ -9,7 +9,8 @@ version: 2.1
 
 jobs:
   test-test-db-orb:
-    #executor: entur-cci-toolbox
+    docker:
+      - image: entur/cci-toolbox:2.1
     machine: true
     steps:
       - checkout

@@ -35,9 +35,8 @@ parameters:
     default: "test-db"
 
 steps:
-  # Not used if machine
-  #- setup_remote_docker:
-  #    docker_layer_caching: true
+  - setup_remote_docker:
+      docker_layer_caching: true
 
   #- checkout #TODO: checkout if checkout = true
   #- run:
