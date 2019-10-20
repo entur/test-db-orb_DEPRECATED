@@ -13,7 +13,6 @@ jobs:
     docker:
       - image: circleci/buildpack-deps
     steps:
-      - checkout
       - test-db/mysql-start:
           mysql-version: "8"
           sql-file: ./test/all_db.sql

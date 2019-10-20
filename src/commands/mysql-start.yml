@@ -37,13 +37,12 @@ parameters:
 steps:
   - setup_remote_docker:
       docker_layer_caching: true
-  #- checkout
-  - run:
-      name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
-      command: |
-        echo '<< parameters.checksum >>'
-        cp '<< parameters.sql-file >>' '<< parameters.checksum >>.sql'
-      environment:
+  - checkout #TODO: checkout if checkout = true
+  #- run:
+  #    name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
+  #    command: |
+  #      echo '<< parameters.checksum >>'
+  #      cp '<< parameters.sql-file >>' '<< parameters.checksum >>.sql'
   - run:
       name: Build Dockerfile
       command: |
@@ -54,7 +53,7 @@ steps:
         echo 'ENV MYSQL_DATABASE=<< parameters.database-name >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_USER=<< parameters.mysql-user >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> tmp_mysql_start.Dockerfile
-        echo 'COPY "<< parameters.checksum >>.sql" /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
+        echo 'COPY "<< parameters.sql-file >>" /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
         echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> tmp_mysql_start.Dockerfile
         echo 'FROM mysql:<< parameters.mysql-version >>' >> tmp_mysql_start.Dockerfile
         echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> tmp_mysql_start.Dockerfile
@@ -64,5 +63,3 @@ steps:
         echo ${TEST_DB_DOCKER_NAME}
         docker build -t ${TEST_DB_DOCKER_NAME} -f tmp_mysql_start.Dockerfile .
         docker run -d -p << parameters.port >>:3306 --name << parameters.server-name >> -e MYSQL_ROOT_PASSWORD=<< parameters.root-password >> ${TEST_DB_DOCKER_NAME}
-      environment:
-        SQL_FILE_CHECKSUM: sql-{{ checksum "<< parameters.sql-file >>" }}
