@@ -10,9 +10,9 @@ version: 2.1
 jobs:
   test-test-db-orb:
     #executor: entur-cci-toolbox
-    docker:
-      - image: circleci/buildpack-deps
+    machine: true
     steps:
+      - checkout
       - test-db/mysql-start:
           mysql-version: "8"
           sql-file: ./test/all_db.sql
@@ -22,6 +22,8 @@ jobs:
           mysql-password: dbpword
           root-password: root
           server-name: test-db
+      #- setup_remote_docker:
+      #    docker_layer_caching: true
       - run: echo $TEST_DB_DOCKER_NAME
       - run: docker run --rm mysql-client mysql --host=test-db --user=root --password=root --database=testdb --execute='show tables;'
 
