@@ -3,7 +3,7 @@ description: |
 
 parameters:
   mysql-version:
-    description: Select a valid MySQL version, i.e "5", "8.0" or "8.0.18"
+    description: Select a valid MySQL version, available here https://circleci.com/docs/2.0/circleci-images/#mysql
     type: string
   sql-file:
     description: Path to SQL file
@@ -30,6 +30,10 @@ parameters:
     description: The name of the server
     type: string
     default: "test-db"
+  sql-file-name-checksum:
+    description: The checksummed filename for the SQL file, this is used to trigger Docker recache
+    type: string
+    default: sql-{{ checksum "<< parameters.sql-file >>" }}
 
 steps:
   - setup_remote_docker:
@@ -38,22 +42,20 @@ steps:
   - run:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
       command: |
-        cat '<< parameters.sql-file >>'
-        echo $SQL_FILE_CHECKSUM
-        cp '<< parameters.sql-file >>' '$SQL_FILE_CHECKSUM.sql'
+        echo '<< parameters.sql-file-name-checksum >>'
+        cp '<< parameters.sql-file >>' '<< parameters.sql-file-name-checksum >>.sql'
       environment:
-        SQL_FILE_CHECKSUM: sql-{{ checksum "<< parameters.sql-file >>" }}
   - run:
       name: Build Dockerfile
       command: |
         touch tmp_mysql_start.Dockerfile
-        echo 'FROM mysql:<< parameters.mysql-version >> as builder' >> tmp_mysql_start.Dockerfile
+        echo 'FROM circleci/mysql:<< parameters.mysql-version >> as builder' >> tmp_mysql_start.Dockerfile
         echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_ROOT_PASSWORD=<< parameters.root-password >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_DATABASE=<< parameters.database-name >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_USER=<< parameters.mysql-user >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> tmp_mysql_start.Dockerfile
-        echo 'COPY "$SQL_FILE_CHECKSUM.sql" /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
+        echo 'COPY "<< parameters.sql-file-name-checksum >>.sql" /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
         echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> tmp_mysql_start.Dockerfile
         echo 'FROM mysql:<< parameters.mysql-version >>' >> tmp_mysql_start.Dockerfile
         echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> tmp_mysql_start.Dockerfile
