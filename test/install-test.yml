@@ -17,6 +17,7 @@ jobs:
       - test-db/mysql-start:
           mysql-version: "8"
           sql-file: ./test/all_db.sql
+          checksum: sql-{{ checksum "./test/all_db.sql" }}
           database-name: testdb
           mysql-user: dbuser
           mysql-password: dbpword
