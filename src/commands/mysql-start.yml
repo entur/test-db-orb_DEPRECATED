@@ -35,8 +35,10 @@ parameters:
     default: "test-db"
 
 steps:
-  - setup_remote_docker:
-      docker_layer_caching: true
+  # Not used if machine
+  #- setup_remote_docker:
+  #    docker_layer_caching: true
+
   #- checkout #TODO: checkout if checkout = true
   #- run:
   #    name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
