@@ -25,7 +25,8 @@ jobs:
       #- setup_remote_docker:
       #    docker_layer_caching: true
       - run: echo $TEST_DB_DOCKER_NAME
-      - run: docker run --rm imega/mysql-client mysql --host=$TEST_DB_DOCKER_NAME --user=root --password=root --database=testdb --execute='show tables;'
+      - run: docker ps
+      - run: docker run --rm imega/mysql-client mysql --host=test-db --user=root --password=root --database=testdb --execute='show tables;'
 
 workflows:
   version: 2.1
