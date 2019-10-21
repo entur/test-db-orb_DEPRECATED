@@ -61,6 +61,7 @@ steps:
         if [[ -n $CIRCLE_PROJECT_REPONAME ]]; then
           echo 'export CIRCLE_PROJECT_REPONAME="test-db-mysql"' >> $BASH_ENV
           source $BASH_ENV
+          echo $CIRCLE_PROJECT_REPONAME
         fi
   - run:
       name: Fail if $DOCKER_REGISTRY is not available
@@ -99,7 +100,7 @@ steps:
         echo 'FROM circleci/mysql:<< parameters.mysql-version >>' >> ./test-db-tmp/Dockerfile
         echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
         cat ./test-db-tmp/Dockerfile
-        echo 'export TEST_DB_DOCKER_NAME=$DOCKER_REGISTRY/$CIRCLE_PROJECT_REPONAME-test-db-sql:$CIRCLE_BRANCH-cci$CIRCLE_BUILD_NUM' >> $BASH_ENV
+        echo 'export TEST_DB_DOCKER_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql:${CIRCLE_BRANCH}-cci${CIRCLE_BUILD_NUM}' >> $BASH_ENV
         source $BASH_ENV
         echo ${TEST_DB_DOCKER_NAME}
         docker build -t ${TEST_DB_DOCKER_NAME} -f ./test-db-tmp/Dockerfile .
