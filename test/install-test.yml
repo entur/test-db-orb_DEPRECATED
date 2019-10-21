@@ -30,8 +30,7 @@ jobs:
             - gcp-auth/authenticate-gcp:
                 gcp-service-key: $DOCKER_PASSWORD
             - run: docker login -u _json_key --password-stdin https://eu.gcr.io < ${HOME}/account-auth.json
-      # next job, you can use 
-
+      # next job, you can use
 workflows:
   version: 2.1
   main:
