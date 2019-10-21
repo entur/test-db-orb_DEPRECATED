@@ -17,7 +17,7 @@ workflows:
           orb-location: orb.yml
           orb-name: test-db
           attach-workspace: true
-          context: dev
+          context: global
           checkout: true
           workspace-root: .
           test-steps: # these happen after the initial test-in-builds
@@ -41,7 +41,7 @@ workflows:
                 name: compile test config
             - run:
                 command: >-
-                  circleci local execute --env GCLOUD_SERVICE_KEY="${GCLOUD_SERVICE_KEY}" --env CLOUDSDK_CONTAINER_CLUSTER="${CLOUDSDK_CONTAINER_CLUSTER}" --env CLOUDSDK_COMPUTE_ZONE="${CLOUDSDK_COMPUTE_ZONE}" --env CLOUDSDK_CORE_PROJECT=${CLOUDSDK_CORE_PROJECT} -c config.yml | tee local_build_output.txt /dev/stderr |
+                  circleci local execute --env DOCKER_REGISTRY="${DOCKER_REGISTRY}" --env CIRCLE_PROJECT_REPONAME="$CIRCLE_PROJECT_REPONAME" -c config.yml | tee local_build_output.txt /dev/stderr |
                   tail -n 1 | grep "Success"
                 name: run test job locally
           requires:
