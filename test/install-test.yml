@@ -29,12 +29,6 @@ jobs:
                 gcp-service-key: $DOCKER_LOGIN
             - run: docker login -u _json_key --password-stdin https://eu.gcr.io < ${HOME}/account-auth.json
 
-      #- setup_remote_docker:
-      #    docker_layer_caching: true
-      - run: echo $TEST_DB_DOCKER_NAME
-      - run: docker ps
-      - run: docker run --rm --link test-db:mysqlsrv imega/mysql-client mysql --host=mysqlsrv --user=root --password=root --database=testdb --execute='show tables;'
-
 workflows:
   version: 2.1
   main:
