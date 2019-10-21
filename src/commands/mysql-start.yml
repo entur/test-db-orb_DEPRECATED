@@ -58,7 +58,7 @@ steps:
   - run:
       name: Make orb tests pass by forcing CIRCLE_PROJECT_REPONAME
       command: |
-        if [[ -n $CIRCLE_PROJECT_REPONAME ]]; then
+        if [[ -z $CIRCLE_PROJECT_REPONAME ]]; then
           echo 'export CIRCLE_PROJECT_REPONAME="test-db-mysql"' >> $BASH_ENV
           source $BASH_ENV
           echo $CIRCLE_PROJECT_REPONAME
