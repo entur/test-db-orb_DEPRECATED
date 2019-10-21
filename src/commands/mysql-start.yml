@@ -56,7 +56,7 @@ steps:
         echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> tmp_mysql_start.Dockerfile
         echo 'COPY "<< parameters.sql-file >>" /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
         echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> tmp_mysql_start.Dockerfile
-        echo 'FROM mysql:<< parameters.mysql-version >>' >> tmp_mysql_start.Dockerfile
+        echo 'FROM circleci/mysql:<< parameters.mysql-version >>' >> tmp_mysql_start.Dockerfile
         echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> tmp_mysql_start.Dockerfile
         cat tmp_mysql_start.Dockerfile
         echo 'export TEST_DB_DOCKER_NAME=db-test-mysql-${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BRANCH}' >> $BASH_ENV
