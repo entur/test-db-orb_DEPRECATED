@@ -99,9 +99,8 @@ steps:
   - run:
       name: Set $TEST_DB_IMAGE_EXISTS:boolean
       command: |
-        existing_tags=$(gcloud container images list-tags --filter="tags:$SQL_CHECKSUM_FILENAME" --format=json $IMAGE_NAME)
-        
-        if [[ "$existing_tags" == "[]" ]]; then
+        EXISTING_TAG_FOR_IMAGE=$(gcloud container images list-tags --filter="tags:$SQL_CHECKSUM_FILENAME" --format=json $IMAGE_NAME)
+        if [[ "$EXISTING_TAG_FOR_IMAGE" == "[]" ]]; then
           echo 'Image does not exist. Continue building'
           echo 'export TEST_DB_IMAGE_EXISTS=false' >> $BASH_ENV
         else
