@@ -95,7 +95,7 @@ steps:
         echo 'ENV MYSQL_DATABASE=<< parameters.database-name >>' >> ./test-db-tmp/Dockerfile
         echo 'ENV MYSQL_USER=<< parameters.mysql-user >>' >> ./test-db-tmp/Dockerfile
         echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> ./test-db-tmp/Dockerfile
-        echo 'COPY "./${SQL_CHECKSUM_FILENAME}.sql" /docker-entrypoint-initdb.d/' >> ./test-db-tmp/Dockerfile
+        echo 'COPY './${SQL_CHECKSUM_FILENAME}.sql' /docker-entrypoint-initdb.d/' >> ./test-db-tmp/Dockerfile
         echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> ./test-db-tmp/Dockerfile
         echo 'FROM circleci/mysql:<< parameters.mysql-version >>' >> ./test-db-tmp/Dockerfile
         echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
