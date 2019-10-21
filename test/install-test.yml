@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - test-db/mysql-start:
-          mysql-version: "8"
+          mysql-version: "5.7"
           sql-file: ./test/all_db.sql
           checksum: sql-{{ checksum "./test/all_db.sql" }}
           database-name: testdb
@@ -26,7 +26,7 @@ jobs:
       #    docker_layer_caching: true
       - run: echo $TEST_DB_DOCKER_NAME
       - run: docker ps
-      - run: docker run --rm --link test-db:mysqlsrv imega/mysql-client mysql --host=localhost --user=root --password=root --database=testdb --execute='show tables;'
+      - run: docker run --rm --link test-db:mysqlsrv imega/mysql-client mysql --host=mysqlsrv --user=root --password=root --database=testdb --execute='show tables;' 
 
 workflows:
   version: 2.1
