@@ -28,6 +28,9 @@ parameters:
       If not provided, the command will look for the environment variable $DOCKER_REGISTRY
     type: string
     default: ""
+  docker-login-steps:
+    description: Steps needed for logging in to docker
+    type: steps
   ## -- Config --
   setup-remote-docker:
     type: boolean
@@ -102,8 +105,12 @@ steps:
         ls ./test-db-tmp
         echo 'export TEST_DB_DOCKER_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql:${SQL_CHECKSUM_FILENAME}' >> $BASH_ENV
         source $BASH_ENV
-        echo "${TEST_DB_DOCKER_NAME}"
-        docker build -t ${TEST_DB_DOCKER_NAME} -f ./test-db-tmp/Dockerfile .
+        docker build -t $TEST_DB_DOCKER_NAME -f ./test-db-tmp/Dockerfile .
         rm -rf ./test-db-tmp
         # docker run -p << parameters.port >>:3306 --name << parameters.server-name >> -e MYSQL_ROOT_PASSWORD=<< parameters.root-password >> -d ${TEST_DB_DOCKER_NAME}
         # docker build -t  .
+  - steps: << parameters.docker-login-steps >>
+  - run:
+      name: Push to docker / container registry
+      command: |
+        docker push $TEST_DB_DOCKER_NAME

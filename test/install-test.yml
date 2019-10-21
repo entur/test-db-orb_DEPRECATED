@@ -3,7 +3,8 @@ version: 2.1
 #Include this in your config.yml
 #orbs:
 #  test-db: entur/test-db@dev:refactor-test-db # Use volatile if you always want the newest version.
-
+orbs:
+  gcp-auth: entur/gcp-auth@volatile
 #executors:
 #  entur-cci-toolbox: test-db/entur-cci-toolbox
 
@@ -23,6 +24,11 @@ jobs:
           mysql-password: dbpword
           root-password: root
           server-name: test-db
+          docker-login-steps:
+            - gcp-auth/authenticate-gcp:
+                gcp-service-key: $DOCKER_LOGIN
+            - run: docker login -u _json_key --password-stdin https://eu.gcr.io < ${HOME}/account-auth.json
+
       #- setup_remote_docker:
       #    docker_layer_caching: true
       - run: echo $TEST_DB_DOCKER_NAME
