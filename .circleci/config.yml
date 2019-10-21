@@ -40,7 +40,7 @@ workflows:
                 name: compile test config
             - run:
                 command: >-
-                  circleci local execute --env DOCKER_REGISTRY="${DOCKER_REGISTRY}" --env DOCKER_LOGIN="${DOCKER_LOGIN}" --env CIRCLE_PROJECT_REPONAME="$CIRCLE_PROJECT_REPONAME" -c config.yml | tee local_build_output.txt /dev/stderr |
+                  circleci local execute --env DOCKER_REGISTRY="${DOCKER_REGISTRY}" --env DOCKER_PASSWORD="${DOCKER_PASSWORD}" --env CIRCLE_PROJECT_REPONAME="$CIRCLE_PROJECT_REPONAME" -c config.yml | tee local_build_output.txt /dev/stderr |
                   tail -n 1 | grep "Success"
                 name: run test job locally
           requires:
