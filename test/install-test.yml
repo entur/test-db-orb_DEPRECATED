@@ -15,6 +15,7 @@ jobs:
       - checkout
       - test-db/mysql-start:
           setup-remote-docker: true
+          docker-registry: eu.gcr.io/entur-1287
           mysql-version: "5.7"
           sql-file: ./test/all_db.sql
           database-name: testdb
