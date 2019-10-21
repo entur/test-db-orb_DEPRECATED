@@ -21,14 +21,13 @@ workflows:
           checkout: true
           workspace-root: .
           test-steps: # these happen after the initial test-in-builds
-            - run:
-                name: Update PATH and Define Environment Variable at Runtime
-                command: |
-                  echo 'export CLOUDSDK_CONTAINER_CLUSTER=${CLOUDSDK_CONTAINER_CLUSTER}' >> $BASH_ENV
-                  echo 'export GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}' >> $BASH_ENV
-                  echo 'export CLOUDSDK_COMPUTE_ZONE=${CLOUDSDK_COMPUTE_ZONE}' >> $BASH_ENV
-                  source $BASH_ENV
-                  echo ${BASH_ENV}
+            #- run:
+            #    name: Update PATH and Define Environment Variable at Runtime
+            #    command: |
+            #      echo 'export CLOUDSDK_CONTAINER_CLUSTER=${CLOUDSDK_CONTAINER_CLUSTER}' >> $BASH_ENV
+            #      echo 'export GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}' >> $BASH_ENV
+            #      echo 'export CLOUDSDK_COMPUTE_ZONE=${CLOUDSDK_COMPUTE_ZONE}' >> $BASH_ENV
+            #      source $BASH_ENV
             # from https://circleci.com/orbs/registry/orb/circleci/orb-tools#commands-local-test-build
             - run: mkdir -p tmp-config-src
             - run: cp test/install-test.yml tmp-config-src/config.yml
