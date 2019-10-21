@@ -19,3 +19,5 @@ COPY --from=builder /initialized-db /var/lib/mysql
 #   docker build -t my-sql-test-db -f mysql.Dockerfile .
 #   docker run -p 3306:3306 --name test-db  -e MYSQL_ROOT_PASSWORD=root -d my-sql-test-db
 #   docker run --rm --link test-db:mysqlsrv imega/mysql-client mysql --host=localhost --user=root --password=root --database=testdb --execute='show tables;'  
+
+# docker run -p 3306:3306 --name test-db  -e MYSQL_ROOT_PASSWORD=root -d db-test-mysql-circleci-demo-test-db-orb

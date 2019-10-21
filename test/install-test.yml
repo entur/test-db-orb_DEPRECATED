@@ -14,6 +14,7 @@ jobs:
     steps:
       - checkout
       - test-db/mysql-start:
+          setup-remote-docker: true
           mysql-version: "5.7"
           sql-file: ./test/all_db.sql
           checksum: sql-{{ checksum "./test/all_db.sql" }}

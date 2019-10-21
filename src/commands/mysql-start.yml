@@ -24,6 +24,13 @@ parameters:
   root-password:
     description: The Root password
     type: string
+  ## -- Config --
+  setup-remote-docker:
+    type: boolean
+    default: false
+  checkout:
+    type: boolean
+    default: false
   ## -- Defaults --
   port:
     description: The port on which this server will be accessible
@@ -35,15 +42,20 @@ parameters:
     default: "test-db"
 
 steps:
-  - setup_remote_docker:
-      docker_layer_caching: true
-
-  #- checkout #TODO: checkout if checkout = true
-  #- run:
-  #    name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
-  #    command: |
-  #      echo '<< parameters.checksum >>'
-  #      cp '<< parameters.sql-file >>' '<< parameters.checksum >>.sql'
+  - when:
+      condition: << parameters.setup-remote-docker >>
+      steps:
+        - setup_remote_docker:
+            docker_layer_caching: true
+  - when:
+      condition: << parameters.checkout >>
+      steps:
+        - checkout
+  - run:
+      name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
+      command: |
+        echo 'Checksum: << parameters.checksum >>'
+        cp '<< parameters.sql-file >>' '<< parameters.checksum >>.sql'
   - run:
       name: Build Dockerfile
       command: |
