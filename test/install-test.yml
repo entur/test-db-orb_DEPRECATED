@@ -12,14 +12,16 @@ jobs:
   test-test-db-orb:
     docker:
       - image: entur/cci-toolbox:2.1
+      - image: eu.gcr.io/entur-system-1287/order-test-db-sql:{{ checksum "./test/all_db.sql" }}
     steps:
       - checkout
-      - test-db/mysql-start:
+      - test-db/mysql-build:
           setup-remote-docker: true
           # docker-registry: dockerhub_username
           mysql-version: "5.7"
           sql-file: ./test/all_db.sql
           database-name: testdb
+          name: schema
           mysql-user: dbuser
           mysql-password: dbpword
           root-password: root
@@ -28,6 +30,7 @@ jobs:
             - gcp-auth/authenticate-gcp:
                 gcp-service-key: $DOCKER_PASSWORD
             - run: docker login -u _json_key --password-stdin https://eu.gcr.io < ${HOME}/account-auth.json
+      # next job, you can use 
 
 workflows:
   version: 2.1
