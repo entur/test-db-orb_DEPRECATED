@@ -8,9 +8,6 @@ parameters:
   sql-file:
     description: Path to SQL file
     type: string
-  checksum:
-    description: The checksummed filename for the SQL file, this is used to trigger Docker recache
-    type: string
   ## -- Authentication --
   database-name:
     description: The name of the database
@@ -54,8 +51,10 @@ steps:
   - run:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
       command: |
-        echo 'Checksum: << parameters.checksum >>'
-        cp '<< parameters.sql-file >>' '<< parameters.checksum >>.sql'
+        echo "export SQL_CHECKSUM_FILENAME=$(md5sum  main.go | awk '{print $1}')" >> $BASH_ENV
+        source $BASH_ENV
+        echo 'Checksum: $SQL_CHECKSUM_FILENAME'
+        cp '<< parameters.sql-file >>' '$SQL_CHECKSUM_FILENAME.sql'
   - run:
       name: Build Dockerfile
       command: |
@@ -66,7 +65,7 @@ steps:
         echo 'ENV MYSQL_DATABASE=<< parameters.database-name >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_USER=<< parameters.mysql-user >>' >> tmp_mysql_start.Dockerfile
         echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> tmp_mysql_start.Dockerfile
-        echo 'COPY "<< parameters.sql-file >>" /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
+        echo 'COPY "$SQL_CHECKSUM_FILENAME.sql" /docker-entrypoint-initdb.d/' >> tmp_mysql_start.Dockerfile
         echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> tmp_mysql_start.Dockerfile
         echo 'FROM circleci/mysql:<< parameters.mysql-version >>' >> tmp_mysql_start.Dockerfile
         echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> tmp_mysql_start.Dockerfile
