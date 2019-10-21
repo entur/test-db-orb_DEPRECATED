@@ -26,7 +26,7 @@ jobs:
       #    docker_layer_caching: true
       - run: echo $TEST_DB_DOCKER_NAME
       - run: docker ps
-      - run: docker run --rm --link test-db:mysqlsrv imega/mysql-client mysql --host=mysqlsrv --user=root --password=root --database=testdb --execute='show tables;' 
+      - run: docker run --rm --link test-db:mysqlsrv imega/mysql-client mysql --host=mysqlsrv --user=root --password=root --database=testdb --execute='show tables;'
 
 workflows:
   version: 2.1
