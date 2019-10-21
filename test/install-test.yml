@@ -21,11 +21,9 @@ jobs:
           mysql-version: "5.7"
           sql-file: ./test/all_db.sql
           database-name: testdb
-          name: schema
           mysql-user: dbuser
           mysql-password: dbpword
           root-password: root
-          server-name: test-db
           docker-login-steps:
             - gcp-auth/authenticate-gcp:
                 gcp-service-key: $DOCKER_PASSWORD
