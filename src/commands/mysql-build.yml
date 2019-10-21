@@ -1,0 +1,127 @@
+description: |
+  Prepares a service image for testing with MySQL
+
+parameters:
+  mysql-version:
+    description: Select a valid MySQL version, available here https://circleci.com/docs/2.0/circleci-images/#mysql
+    type: string
+  sql-file:
+    description: Path to SQL file
+    type: string
+  ## -- MySQL Authentication --
+  database-name:
+    description: The name of the database
+    type: string
+  mysql-user:
+    description: The user of the database
+    type: string
+  mysql-password:
+    description: The password for the user of the databsae
+    type: string
+  root-password:
+    description: The Root password
+    type: string
+  ## -- Docker --
+  docker-registry:
+    description: |
+      The Docker registry, typically `username` or `gcr.io/[PROJECT_ID]` for GCP projects.
+      If not provided, the command will look for the environment variable $DOCKER_REGISTRY
+    type: string
+    default: ""
+  docker-login-steps:
+    description: Steps needed for logging in to docker
+    type: steps
+  ## -- Config --
+  setup-remote-docker:
+    type: boolean
+    default: false
+  checkout:
+    type: boolean
+    default: false
+
+steps:
+  - when:
+      condition: << parameters.setup-remote-docker >>
+      steps:
+        - setup_remote_docker:
+            docker_layer_caching: true
+  - when:
+      condition: << parameters.checkout >>
+      steps:
+        - checkout
+  - run:
+      name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
+      command: |
+        mkdir test-db-tmp
+        echo "export SQL_CHECKSUM_FILENAME=$(cat '<< parameters.sql-file >>' | openssl dgst -binary -sha1 | openssl base64)" >> $BASH_ENV
+        source $BASH_ENV
+        echo "Checksum: ${SQL_CHECKSUM_FILENAME}"
+        cp "<< parameters.sql-file >>" "./test-db-tmp/${SQL_CHECKSUM_FILENAME}.sql"
+  - run:
+      name: Check that Docker Registry is available
+      command: |
+        DOCKER_REGISTRY_PARAM="<< parameters.docker-registry >>"
+        if [[ -n "${DOCKER_REGISTRY_PARAM}" ]]; then
+          echo "Using credentials provided in parameters."
+          echo 'export DOCKER_REGISTRY=$DOCKER_REGISTRY_PARAM' >> $BASH_ENV
+          source $BASH_ENV
+        elif [[ -n "${DOCKER_REGISTRY}" ]]; then
+          echo "Using credentials from environment."
+        else
+          echo "No credentials were found. Looked in parameter docker-registry and environment DOCKER_REGISTRY."
+          exit 1
+        fi
+  - run:
+      name: Make orb tests pass by forcing CIRCLE_PROJECT_REPONAME
+      command: |
+        if [[ -z $CIRCLE_PROJECT_REPONAME ]]; then
+          echo 'export CIRCLE_PROJECT_REPONAME="test-db-mysql"' >> $BASH_ENV
+          source $BASH_ENV
+          echo $CIRCLE_PROJECT_REPONAME
+        fi
+  - steps: << parameters.docker-login-steps >>
+  - run:
+      name: Set TEST_DB_DOCKER_NAME
+      command: |
+        echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql' >> $BASH_ENV
+        source $BASH_ENV
+        echo 'export TEST_DB_DOCKER_NAME=${IMAGE_NAME}:${SQL_CHECKSUM_FILENAME}' >> $BASH_ENV
+        source $BASH_ENV
+  - run:
+      name: Set $TEST_DB_IMAGE_EXISTS:boolean
+      command: |
+        EXISTING_TAG_FOR_IMAGE=$(gcloud container images list-tags --filter="tags:$SQL_CHECKSUM_FILENAME" --format=json $IMAGE_NAME)
+        if [[ "$EXISTING_TAG_FOR_IMAGE" == "[]" ]]; then
+          echo 'Image does not exist. Continue building'
+          echo 'export TEST_DB_IMAGE_EXISTS=false' >> $BASH_ENV
+        else
+          echo 'Image exists. Skip the next parts.'
+          echo 'export TEST_DB_IMAGE_EXISTS=true' >> $BASH_ENV
+        fi
+        source $BASH_ENV
+  - run:
+      name: Build Dockerfile
+      command: |
+        if [ "$TEST_DB_IMAGE_EXISTS" = false ] ; then
+          touch ./test-db-tmp/Dockerfile
+          echo 'FROM circleci/mysql:<< parameters.mysql-version >> as builder' >> ./test-db-tmp/Dockerfile
+          echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> ./test-db-tmp/Dockerfile
+          echo 'ENV MYSQL_ROOT_PASSWORD=<< parameters.root-password >>' >> ./test-db-tmp/Dockerfile
+          echo 'ENV MYSQL_DATABASE=<< parameters.database-name >>' >> ./test-db-tmp/Dockerfile
+          echo 'ENV MYSQL_USER=<< parameters.mysql-user >>' >> ./test-db-tmp/Dockerfile
+          echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> ./test-db-tmp/Dockerfile
+          echo "COPY './test-db-tmp/${SQL_CHECKSUM_FILENAME}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
+          echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> ./test-db-tmp/Dockerfile
+          echo 'FROM circleci/mysql:<< parameters.mysql-version >>' >> ./test-db-tmp/Dockerfile
+          echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
+          ls ./test-db-tmp
+          source $BASH_ENV
+          docker build -t $TEST_DB_DOCKER_NAME -f ./test-db-tmp/Dockerfile .
+          rm -rf ./test-db-tmp
+        fi
+  - run:
+      name: Push to docker / container registry
+      command: |
+        if [ "$TEST_DB_IMAGE_EXISTS" = false ] ; then
+          docker push $TEST_DB_DOCKER_NAME
+        fi
