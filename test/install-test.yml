@@ -34,3 +34,4 @@ workflows:
     jobs:
       - test-test-db-orb:
           name: build #must be called build for the test to be run
+          context: global

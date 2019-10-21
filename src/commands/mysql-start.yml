@@ -51,7 +51,7 @@ steps:
   - run:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
       command: |
-        echo "export SQL_CHECKSUM_FILENAME=${md5sum '<< parameters.sql-file >>' | awk '{print $1}'}" >> $BASH_ENV
+        echo "export SQL_CHECKSUM_FILENAME=$(md5sum '<< parameters.sql-file >>' | awk '{print $1}')" >> $BASH_ENV
         source $BASH_ENV
         echo 'Checksum: ${SQL_CHECKSUM_FILENAME}'
         cp '<< parameters.sql-file >>' '${SQL_CHECKSUM_FILENAME}.sql'
