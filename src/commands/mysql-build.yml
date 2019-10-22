@@ -89,7 +89,7 @@ steps:
   - run:
       name: Set TEST_DB_DOCKER_NAME and TEST_DB_DOCKER_NAME_LATEST
       command: |
-        echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql-<< parameters.image-name-suffix >>' >> $BASH_ENV
+        echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-mysql-<< parameters.image-name-suffix >>' >> $BASH_ENV
         source $BASH_ENV
         echo 'export TEST_DB_DOCKER_NAME=${IMAGE_NAME}:${SQL_CHECKSUM_FILENAME}' >> $BASH_ENV
         echo 'export TEST_DB_DOCKER_NAME_LATEST=${IMAGE_NAME}:latest' >> $BASH_ENV
