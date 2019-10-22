@@ -7,20 +7,15 @@ orbs:
   gcp-auth: entur/gcp-auth@volatile
 #executors:
 #  entur-cci-toolbox: test-db/entur-cci-toolbox
-
+#TODO: rename all mysql envs to mysql- prefixed
 jobs:
   test-test-db-orb:
     docker:
       - image: entur/cci-toolbox:2.1
-      - image: eu.gcr.io/entur-system-1287/test-db-orb-test-db-sql:{{ checksum "./test/all_db.sql" }}
-        auth:
-          username: $DOCKER_LOGIN
-          password: $DOCKER_PASSWORD
     steps:
       - checkout
       - test-db/mysql-build:
           setup-remote-docker: true
-          # docker-registry: dockerhub_username
           mysql-version: "5.7"
           sql-file: ./test/all_db.sql
           database-name: testdb
