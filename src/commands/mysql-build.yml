@@ -87,11 +87,12 @@ steps:
         fi
   - steps: << parameters.docker-login-steps >>
   - run:
-      name: Set TEST_DB_DOCKER_NAME
+      name: Set TEST_DB_DOCKER_NAME and TEST_DB_DOCKER_NAME_LATEST
       command: |
         echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql-<< parameters.image-name-suffix >>' >> $BASH_ENV
         source $BASH_ENV
         echo 'export TEST_DB_DOCKER_NAME=${IMAGE_NAME}:${SQL_CHECKSUM_FILENAME}' >> $BASH_ENV
+        echo 'export TEST_DB_DOCKER_NAME_LATEST=${IMAGE_NAME}:latest' >> $BASH_ENV
         source $BASH_ENV
         echo $TEST_DB_DOCKER_NAME
   - run:
@@ -123,7 +124,7 @@ steps:
           echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
           ls ./test-db-tmp
           source $BASH_ENV
-          docker build -t $TEST_DB_DOCKER_NAME -f ./test-db-tmp/Dockerfile .
+          docker build -t $TEST_DB_DOCKER_NAME -t TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
           rm -rf ./test-db-tmp
         fi
   - run:
@@ -131,4 +132,5 @@ steps:
       command: |
         if [ "$TEST_DB_IMAGE_EXISTS" = false ] ; then
           docker push $TEST_DB_DOCKER_NAME
+          docker push $TEST_DB_DOCKER_NAME_LATEST
         fi
