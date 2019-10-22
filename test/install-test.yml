@@ -17,7 +17,7 @@ jobs:
           database-version: "8"
           database-schema: ./test/all_db.sql
           docker-login-steps:
-            #- gcp-auth/authenticate-gcp: #TODO: necessary? 
+            #- gcp-auth/authenticate-gcp: #TODO: necessary?
             #    gcp-service-key: $DOCKER_PASSWORD
             - run: docker login -u _json_key --password-stdin https://eu.gcr.io < ${HOME}/account-auth.json
       # next job, you can use
