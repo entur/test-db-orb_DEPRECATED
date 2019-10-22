@@ -51,9 +51,9 @@ steps:
       condition: << parameters.checkout >>
       steps:
         - checkout
-  - run:
-      name: Install OpenSSL
-      command: apk add openssl
+  #- run:
+  #    name: Install OpenSSL
+  #    command: apk add openssl
   - run:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
       command: |
