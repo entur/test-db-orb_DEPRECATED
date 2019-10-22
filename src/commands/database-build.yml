@@ -23,14 +23,26 @@ parameters:
   database-schema:
     description: Path to the file describing the current schema (i.e ./db/db_test_dump.sql)
     type: string
-  ## -- Docker --
-  docker-login-steps:
-    description: Steps needed for logging in to docker
-    type: steps
-  docker-registry: #$DOCKER_REGISTRY
+  ## -- GCP --
+  gcp-service-key:
     description: |
-      The Docker registry, typically `username` or `gcr.io/[PROJECT_ID]` for GCP projects.
-      If not provided, the command will look for the environment variable $DOCKER_REGISTRY
+      The credentials for the Service Account to be used when communicating to Google Cloud.
+      If not provided, the command will look for the environment variable $GCLOUD_SERVICE_KEY
+
+      To obtain the key for this command,
+      use either the Google Cloud Platform Console or gcloud iam service-accounts keys create.
+      The key can be .json (preferred) or .p12 (legacy) format.
+    type: string
+    default: ""
+  ## -- Docker --
+  gcr-namespace: 
+    description: |
+      The `*.gcr.io` part in `*.gcr.io/[PROJECT_ID]`
+    type: string
+    default: ""
+  gcr-project: 
+    description: |
+      The `{PROJECT_ID}` part in `*.gcr.io/[PROJECT_ID]`
     type: string
     default: ""
   ## -- Config --
@@ -65,15 +77,13 @@ steps:
   - run:
       name: Check that Docker Registry is available
       command: |
-        DOCKER_REGISTRY_PARAM="<< parameters.docker-registry >>"
+        DOCKER_REGISTRY_PARAM="<< parameters.gcr-namespace >>/<< parameters.gcr-project >>"
         if [[ -n "${DOCKER_REGISTRY_PARAM}" ]]; then
           echo "Using docker registry provided in parameters."
           echo 'export DOCKER_REGISTRY=$DOCKER_REGISTRY_PARAM' >> $BASH_ENV
           source $BASH_ENV
-        elif [[ -n "${DOCKER_REGISTRY}" ]]; then
-          echo "Using docker registry from environment."
         else
-          echo "No docker registry were found. Looked in parameter docker-registry and environment DOCKER_REGISTRY."
+          echo "Must specify gcr-namespace and gcr-project"
           exit 1
         fi
   - run:
@@ -84,7 +94,6 @@ steps:
           source $BASH_ENV
           echo $CIRCLE_PROJECT_REPONAME
         fi
-  - steps: << parameters.docker-login-steps >>
   - run:
       name: Set IMAGE_NAME, TEST_DB_DOCKER_NAME and TEST_DB_DOCKER_NAME_LATEST
       command: |
@@ -93,6 +102,11 @@ steps:
         echo 'export TEST_DB_DOCKER_NAME_LATEST=${IMAGE_NAME}:latest' >> $BASH_ENV
         source $BASH_ENV
         echo $TEST_DB_DOCKER_NAME
+  - gcp-auth/authenticate-gcp:
+      gcp-service-key: << parameters.gcp-service-key >>
+  - run:
+      name:
+      command: docker login -u _json_key --password-stdin https://<< parameters.gcr-namespace >> ${HOME}/account-auth.json
   - run:
       name: Set $TEST_DB_IMAGE_EXISTS:boolean
       command: |
