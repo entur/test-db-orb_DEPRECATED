@@ -35,12 +35,12 @@ parameters:
     type: string
     default: ""
   ## -- Docker --
-  gcr-namespace: 
+  gcr-namespace:
     description: |
       The `*.gcr.io` part in `*.gcr.io/[PROJECT_ID]`
     type: string
     default: ""
-  gcr-project: 
+  gcr-project:
     description: |
       The `{PROJECT_ID}` part in `*.gcr.io/[PROJECT_ID]`
     type: string
