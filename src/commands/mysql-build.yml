@@ -2,8 +2,8 @@ description: |
   Prepares a service image for testing with MySQL
 
 parameters:
-  image-name:
-    description: Select a name for the docker image. It will result in {REPOSITORY_NAME}-test-db-mysql-{name}
+  image-name-suffix:
+    description: Select a name for the docker image name suffix. It will result in {REPOSITORY_NAME}-test-db-mysql-{image-name-suffix}
     type: string
   mysql-version:
     description: Select a valid MySQL version, available here https://circleci.com/docs/2.0/circleci-images/#mysql
@@ -89,7 +89,7 @@ steps:
   - run:
       name: Set TEST_DB_DOCKER_NAME
       command: |
-        echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql-<< parameters.image-name >>' >> $BASH_ENV
+        echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql-<< parameters.image-name-suffix >>' >> $BASH_ENV
         source $BASH_ENV
         echo 'export TEST_DB_DOCKER_NAME=${IMAGE_NAME}:${SQL_CHECKSUM_FILENAME}' >> $BASH_ENV
         source $BASH_ENV

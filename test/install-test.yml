@@ -15,13 +15,14 @@ jobs:
     steps:
       - checkout
       - test-db/mysql-build:
+          image-name-suffix: test
           setup-remote-docker: true
           mysql-version: "5.7"
           sql-file: ./test/all_db.sql
-          database-name: testdb
+          mysql-database: testdb
           mysql-user: dbuser
           mysql-password: dbpword
-          root-password: root
+          mysql-root-password: root
           docker-login-steps:
             - gcp-auth/authenticate-gcp:
                 gcp-service-key: $DOCKER_PASSWORD
