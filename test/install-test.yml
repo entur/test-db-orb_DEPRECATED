@@ -7,7 +7,7 @@ orbs:
   gcp-auth: entur/gcp-auth@volatile
 jobs:
   test-test-db-orb:
-    executor: test-db/buildpack-deps
+    executor: test-db/entur-cci-toolbox
     steps:
       - test-db/database-build:
           image-name-suffix: test
@@ -17,9 +17,9 @@ jobs:
           database-version: "8"
           database-schema: ./test/all_db.sql
           docker-login-steps:
-            - gcp-auth/authenticate-gcp: #TODO: necessary?
-                gcp-service-key: $DOCKER_PASSWORD
-            #- run: echo $DOCKER_PASSWORD > ${HOME}/account-auth.json
+            #- gcp-auth/authenticate-gcp: #TODO: necessary?
+            #    gcp-service-key: $DOCKER_PASSWORD
+            - run: echo $DOCKER_PASSWORD > ${HOME}/account-auth.json
             - run: docker login -u _json_key --password-stdin https://eu.gcr.io < ${HOME}/account-auth.json
       # next job, you can use
 workflows:

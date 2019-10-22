@@ -6,6 +6,6 @@ description: |
   Project homepage: https://github.com/entur/test-db-orb
 
 executors:
-  buildpack-deps:
+  entur-cci-toolbox:
     docker:
-      - image: circleci/buildpack-deps:trusty
+      - image: entur/cci-toolbox:2.1
