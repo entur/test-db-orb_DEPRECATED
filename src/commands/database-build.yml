@@ -106,7 +106,7 @@ steps:
       gcp-service-key: << parameters.gcp-service-key >>
   - run:
       name:
-      command: docker login -u _json_key --password-stdin https://<< parameters.gcr-namespace >> ${HOME}/account-auth.json
+      command: docker login -u _json_key --password-stdin https://<< parameters.gcr-namespace >> < ${HOME}/account-auth.json
   - run:
       name: Set $TEST_DB_IMAGE_EXISTS:boolean
       command: |
