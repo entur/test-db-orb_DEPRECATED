@@ -124,7 +124,7 @@ steps:
           echo 'COPY --from=builder /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
           ls ./test-db-tmp
           source $BASH_ENV
-          docker build -t $TEST_DB_DOCKER_NAME -t TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
+          docker build -t $TEST_DB_DOCKER_NAME -t $TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
           rm -rf ./test-db-tmp
         fi
   - run:
