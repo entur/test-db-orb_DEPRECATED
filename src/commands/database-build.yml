@@ -79,9 +79,9 @@ steps:
       command: |
         DOCKER_REGISTRY_PARAM="<< parameters.gcr-namespace >>/<< parameters.gcr-project >>"
         if [[ -n "${DOCKER_REGISTRY_PARAM}" ]]; then
-          echo "Using docker registry provided in parameters."
-          echo 'export DOCKER_REGISTRY=$DOCKER_REGISTRY_PARAM' >> $BASH_ENV
+          echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_PARAM" >> $BASH_ENV
           source $BASH_ENV
+          echo "Using docker registry $DOCKER_REGISTRY, provided in parameters."
         else
           echo "Must specify gcr-namespace and gcr-project"
           exit 1
