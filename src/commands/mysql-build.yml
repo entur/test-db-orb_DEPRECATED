@@ -2,6 +2,9 @@ description: |
   Prepares a service image for testing with MySQL
 
 parameters:
+  image-name:
+    description: Select a name for the docker image. It will result in {REPOSITORY_NAME}-test-db-mysql-{name}
+    type: string
   mysql-version:
     description: Select a valid MySQL version, available here https://circleci.com/docs/2.0/circleci-images/#mysql
     type: string
@@ -9,7 +12,7 @@ parameters:
     description: Path to SQL file
     type: string
   ## -- MySQL Authentication --
-  database-name:
+  mysql-database:
     description: The name of the database
     type: string
   mysql-user:
@@ -18,7 +21,7 @@ parameters:
   mysql-password:
     description: The password for the user of the databsae
     type: string
-  root-password:
+  mysql-root-password:
     description: The Root password
     type: string
   ## -- Docker --
@@ -56,7 +59,7 @@ steps:
       name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
       command: |
         mkdir test-db-tmp
-        echo "export SQL_CHECKSUM_FILENAME=$(cat '<< parameters.sql-file >>' | openssl dgst -binary -sha1 | openssl base64)" >> $BASH_ENV
+        echo "export SQL_CHECKSUM_FILENAME=$(md5sum '<< parameters.sql-file >>' | awk '{print $1}')" >> $BASH_ENV
         source $BASH_ENV
         echo "Checksum: ${SQL_CHECKSUM_FILENAME}"
         cp "<< parameters.sql-file >>" "./test-db-tmp/${SQL_CHECKSUM_FILENAME}.sql"
@@ -86,10 +89,11 @@ steps:
   - run:
       name: Set TEST_DB_DOCKER_NAME
       command: |
-        echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql' >> $BASH_ENV
+        echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-sql-<< parameters.image-name >>' >> $BASH_ENV
         source $BASH_ENV
         echo 'export TEST_DB_DOCKER_NAME=${IMAGE_NAME}:${SQL_CHECKSUM_FILENAME}' >> $BASH_ENV
         source $BASH_ENV
+        echo $TEST_DB_DOCKER_NAME
   - run:
       name: Set $TEST_DB_IMAGE_EXISTS:boolean
       command: |
@@ -109,8 +113,8 @@ steps:
           touch ./test-db-tmp/Dockerfile
           echo 'FROM circleci/mysql:<< parameters.mysql-version >> as builder' >> ./test-db-tmp/Dockerfile
           echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> ./test-db-tmp/Dockerfile
-          echo 'ENV MYSQL_ROOT_PASSWORD=<< parameters.root-password >>' >> ./test-db-tmp/Dockerfile
-          echo 'ENV MYSQL_DATABASE=<< parameters.database-name >>' >> ./test-db-tmp/Dockerfile
+          echo 'ENV MYSQL_ROOT_PASSWORD=<< parameters.mysql-root-password >>' >> ./test-db-tmp/Dockerfile
+          echo 'ENV MYSQL_DATABASE=<< parameters.mysql-database >>' >> ./test-db-tmp/Dockerfile
           echo 'ENV MYSQL_USER=<< parameters.mysql-user >>' >> ./test-db-tmp/Dockerfile
           echo 'ENV MYSQL_PASSWORD=<< parameters.mysql-password >>' >> ./test-db-tmp/Dockerfile
           echo "COPY './test-db-tmp/${SQL_CHECKSUM_FILENAME}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
