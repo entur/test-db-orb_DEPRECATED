@@ -1,0 +1,149 @@
+description: |
+  Prepares a service image for testing with MySQL
+
+parameters:
+  image-name-suffix:
+    description: Select a name for the docker image name suffix. It will result in {REPOSITORY_NAME}-test-db-{database-type}-{image-name-suffix}
+    type: string
+  database-type:
+    description: |
+      Select a database type
+
+      mysql - https://hub.docker.com/r/circleci/mysql/tags
+      postgres - https://hub.docker.com/r/circleci/postgres/tags
+      #cassandra - https://hub.docker.com/r/circleci/cassandra/tags
+    type: enum
+    enum:
+      - "mysql"
+      - "postgres"
+      #- "cassandra"
+  database-version:
+    description: Select a valid tag from https://hub.docker.com/u/circleci
+    type: string
+  database-schema:
+    description: Path to the file describing the current schema (i.e ./db/db_test_dump.sql)
+    type: string
+  ## -- Docker --
+  docker-login-steps:
+    description: Steps needed for logging in to docker
+    type: steps
+  docker-registry: #$DOCKER_REGISTRY
+    description: |
+      The Docker registry, typically `username` or `gcr.io/[PROJECT_ID]` for GCP projects.
+      If not provided, the command will look for the environment variable $DOCKER_REGISTRY
+    type: string
+    default: ""
+  ## -- Config --
+  setup-remote-docker:
+    type: boolean
+    default: false
+  checkout:
+    type: boolean
+    default: false
+
+steps:
+  - when:
+      condition: << parameters.setup-remote-docker >>
+      steps:
+        - setup_remote_docker:
+            docker_layer_caching: true
+  - when:
+      condition: << parameters.checkout >>
+      steps:
+        - checkout
+  - run:
+      name: Install OpenSSL
+      command: apk add openssl
+  - run:
+      name: Copy db setup to a checksum filename, this will trigger rebuild of Dockerfile
+      command: |
+        mkdir test-db-tmp
+        echo "export DATABASE_FILE_CHECKSUM=$(md5sum '<< parameters.database-schema >>' | awk '{print $1}')" >> $BASH_ENV
+        source $BASH_ENV
+        echo "Checksum: ${DATABASE_FILE_CHECKSUM}"
+        cp "<< parameters.database-schema >>" "./test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql"
+  - run:
+      name: Check that Docker Registry is available
+      command: |
+        DOCKER_REGISTRY_PARAM="<< parameters.docker-registry >>"
+        if [[ -n "${DOCKER_REGISTRY_PARAM}" ]]; then
+          echo "Using docker registry provided in parameters."
+          echo 'export DOCKER_REGISTRY=$DOCKER_REGISTRY_PARAM' >> $BASH_ENV
+          source $BASH_ENV
+        elif [[ -n "${DOCKER_REGISTRY}" ]]; then
+          echo "Using docker registry from environment."
+        else
+          echo "No docker registry were found. Looked in parameter docker-registry and environment DOCKER_REGISTRY."
+          exit 1
+        fi
+  - run:
+      name: Make orb tests pass by forcing CIRCLE_PROJECT_REPONAME
+      command: |
+        if [[ -z $CIRCLE_PROJECT_REPONAME ]]; then
+          echo 'export CIRCLE_PROJECT_REPONAME="test-db-<< parameters.database-type >>"' >> $BASH_ENV
+          source $BASH_ENV
+          echo $CIRCLE_PROJECT_REPONAME
+        fi
+  - steps: << parameters.docker-login-steps >>
+  - run:
+      name: Set IMAGE_NAME, TEST_DB_DOCKER_NAME and TEST_DB_DOCKER_NAME_LATEST
+      command: |
+        echo 'export IMAGE_NAME=${DOCKER_REGISTRY}/${CIRCLE_PROJECT_REPONAME}-test-db-<< parameters.database-type >>-<< parameters.image-name-suffix >>' >> $BASH_ENV
+        echo 'export TEST_DB_DOCKER_NAME=${IMAGE_NAME}:${DATABASE_FILE_CHECKSUM}' >> $BASH_ENV
+        echo 'export TEST_DB_DOCKER_NAME_LATEST=${IMAGE_NAME}:latest' >> $BASH_ENV
+        source $BASH_ENV
+        echo $TEST_DB_DOCKER_NAME
+  - run:
+      name: Set $TEST_DB_IMAGE_EXISTS:boolean
+      command: |
+        EXISTING_TAG_FOR_IMAGE=$(gcloud container images list-tags --filter="tags:$DATABASE_FILE_CHECKSUM" --format=json $IMAGE_NAME)
+        if [[ "$EXISTING_TAG_FOR_IMAGE" == "[]" ]]; then
+          echo 'Image does not exist. Continue building'
+          echo 'export TEST_DB_IMAGE_EXISTS=false' >> $BASH_ENV
+        else
+          echo 'Image exists. Skip the next parts.'
+          echo 'export TEST_DB_IMAGE_EXISTS=true' >> $BASH_ENV
+        fi
+        source $BASH_ENV
+  - run:
+      name: Build MySQL Dockerfile
+      command: |
+        if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [[ '<< parameters.database-type >>' == 'mysql']]; then
+          touch ./test-db-tmp/Dockerfile
+          echo 'FROM circleci/mysql:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
+          echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> ./test-db-tmp/Dockerfile
+          echo "COPY './test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
+          echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> ./test-db-tmp/Dockerfile
+          echo 'FROM circleci/mysql:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
+          echo 'COPY --from=donor /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
+          ls ./test-db-tmp
+          docker build -t $TEST_DB_DOCKER_NAME -t $TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
+          rm -rf ./test-db-tmp
+        else
+          echo 'Not building MySQL image for type << parameters.database-type >>'
+        fi
+  - run:
+      name: Build Postgres Dockerfile
+      command: |
+        if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [[ '<< parameters.database-type >>' == 'postgres']]; then
+          touch ./test-db-tmp/Dockerfile
+          echo 'FROM circleci/postgres:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
+          echo 'ENV PGDATA=/pgdata' >> ./test-db-tmp/Dockerfile
+          echo "COPY './test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
+          echo 'RUN /docker-entrypoint.sh --help' >> ./test-db-tmp/Dockerfile
+          echo 'FROM circleci/postgres:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
+          echo 'ENV PGDATA=/pgdata' >> ./test-db-tmp/Dockerfile
+          echo 'COPY --chown=postgres:postgres --from=donor /pgdata /pgdata' >> ./test-db-tmp/Dockerfile
+          ls ./test-db-tmp
+          docker build -t $TEST_DB_DOCKER_NAME -t $TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
+          rm -rf ./test-db-tmp
+        else
+          echo 'Not building Postgres image for type << parameters.database-type >>'
+        fi
+  - run:
+      name: Push to docker / container registry
+      command: |
+        if [ "$TEST_DB_IMAGE_EXISTS" = false ] ; then
+          docker push $TEST_DB_DOCKER_NAME
+          docker push $TEST_DB_DOCKER_NAME_LATEST
+        fi

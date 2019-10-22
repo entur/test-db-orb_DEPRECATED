@@ -6,7 +6,6 @@ description: |
   Project homepage: https://github.com/entur/test-db-orb
 
 executors:
-  entur-cci-toolbox:
+  buildpack-deps:
     docker:
-      # Entur CCI-toolbox has gcloud & rsync pre-installed.
-      - image: entur/cci-toolbox:2.1
+      - image: circleci/buildpack-deps:trusty
