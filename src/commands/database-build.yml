@@ -122,7 +122,7 @@ steps:
   - run:
       name: Build MySQL Dockerfile
       command: |
-        if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [[ '<< parameters.database-type >>' == 'mysql']]
+        if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [ '<< parameters.database-type >>' = 'mysql' ]; then
         then
           touch ./test-db-tmp/Dockerfile
           echo 'FROM circleci/mysql:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
@@ -140,8 +140,7 @@ steps:
   - run:
       name: Build Postgres Dockerfile
       command: |
-        if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [[ '<< parameters.database-type >>' == 'postgres']]
-        then
+        if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [ '<< parameters.database-type >>' = 'postgres' ]; then
           touch ./test-db-tmp/Dockerfile
           echo 'FROM circleci/postgres:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
           echo 'ENV PGDATA=/pgdata' >> ./test-db-tmp/Dockerfile
