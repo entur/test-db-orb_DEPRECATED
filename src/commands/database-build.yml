@@ -123,7 +123,6 @@ steps:
       name: Build MySQL Dockerfile
       command: |
         if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [ '<< parameters.database-type >>' = 'mysql' ]; then
-        then
           touch ./test-db-tmp/Dockerfile
           echo 'FROM circleci/mysql:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
           echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> ./test-db-tmp/Dockerfile
