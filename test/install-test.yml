@@ -14,6 +14,10 @@ jobs:
           database-type: "mysql"
           database-version: "8"
           database-schema: ./test/all_db.sql
+          env-database-name: test-db-orb
+          env-database-user: test-db-orb-user
+          env-database-user-password: test-db-orb-password
+          env-database-root-password: test-db-orb-root-password
           gcp-service-key: $DOCKER_PASSWORD
           gcr-namespace: eu.gcr.io
           gcr-project: entur-system-1287

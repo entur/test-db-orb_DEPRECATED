@@ -23,6 +23,23 @@ parameters:
   database-schema:
     description: Path to the file describing the current schema (i.e ./db/db_test_dump.sql)
     type: string
+  ## -- Environment - 
+  env-database-name:
+    description: Name of the database. If not set, docker image defaults will be used.
+    type: string
+    default: ""
+  env-database-user:
+    description: Name of the database user. If not set, docker image defaults will be used.
+    type: string
+    default: ""
+  env-database-user-password:
+    description: Password of the database user. If not set, docker image defaults will be used.
+    type: string
+    default: ""
+  env-database-root-password:
+    description: Name of the root user, if applicable. If not set, docker image defaults will be used.
+    type: string
+    default: ""
   ## -- GCP --
   gcp-service-key:
     description: |
@@ -127,10 +144,22 @@ steps:
           echo 'FROM circleci/mysql:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
           echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> ./test-db-tmp/Dockerfile
           echo "COPY './test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
+          if [[ -n "<< parameters.env-database-name >>" ]]; then
+            echo "ENV MYSQL_DATABASE=<< parameters.env-database-name >>" >> ./test-db-tmp/Dockerfile
+          else
+          if [[ -n "<< parameters.env-database-user >>" ]]; then
+            echo "ENV MYSQL_USER=<< parameters.env-database-user >>" >> ./test-db-tmp/Dockerfile
+          else
+          if [[ -n "<< parameters.env-database-user-password >>" ]]; then
+            echo "ENV MYSQL_PASSWORD=<< parameters.env-database-user-password >>" >> ./test-db-tmp/Dockerfile
+          else
+          if [[ -n "<< parameters.env-database-root-password >>" ]]; then
+            echo "ENV MYSQL_ROOT_PASSWORD=<< parameters.env-database-root-password >>" >> ./test-db-tmp/Dockerfile
+          else
           echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> ./test-db-tmp/Dockerfile
           echo 'FROM circleci/mysql:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
           echo 'COPY --from=donor /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
-          ls ./test-db-tmp
+          cat ./test-db-tmp/Dockerfile
           docker build -t $TEST_DB_DOCKER_NAME -t $TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
           rm -rf ./test-db-tmp
         else
@@ -143,12 +172,24 @@ steps:
           touch ./test-db-tmp/Dockerfile
           echo 'FROM circleci/postgres:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
           echo 'ENV PGDATA=/pgdata' >> ./test-db-tmp/Dockerfile
+          if [[ -n "<< parameters.env-database-name >>" ]]; then
+            echo "ENV POSTGRES_DB=<< parameters.env-database-name >>" >> ./test-db-tmp/Dockerfile
+          else
+          if [[ -n "<< parameters.env-database-user >>" ]]; then
+            echo "ENV POSTGRES_USER=<< parameters.env-database-user >>" >> ./test-db-tmp/Dockerfile
+          else
+          if [[ -n "<< parameters.env-database-user-password >>" ]]; then
+            echo "ENV POSTGRES_PASSWORD=<< parameters.env-database-user-password >>" >> ./test-db-tmp/Dockerfile
+          else
+          if [[ -n "<< parameters.env-database-root-password >>" ]]; then
+            echo "Postgres does not support setting root password like MySQL does. Use env-database-user-password instead."
+          else
           echo "COPY './test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
           echo 'RUN /docker-entrypoint.sh --help' >> ./test-db-tmp/Dockerfile
           echo 'FROM circleci/postgres:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
           echo 'ENV PGDATA=/pgdata' >> ./test-db-tmp/Dockerfile
           echo 'COPY --chown=postgres:postgres --from=donor /pgdata /pgdata' >> ./test-db-tmp/Dockerfile
-          ls ./test-db-tmp
+          cat ./test-db-tmp/Dockerfile
           docker build -t $TEST_DB_DOCKER_NAME -t $TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
           rm -rf ./test-db-tmp
         else
