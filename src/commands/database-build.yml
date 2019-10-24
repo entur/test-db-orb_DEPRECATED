@@ -155,7 +155,7 @@ steps:
           fi
           if [[ -n "<< parameters.env-database-root-password >>" ]]; then
             echo "ENV MYSQL_ROOT_PASSWORD=<< parameters.env-database-root-password >>" >> ./test-db-tmp/Dockerfile
-          else
+          fi
           echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> ./test-db-tmp/Dockerfile
           echo 'FROM circleci/mysql:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
           echo 'COPY --from=donor /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
@@ -183,7 +183,7 @@ steps:
           fi
           if [[ -n "<< parameters.env-database-root-password >>" ]]; then
             echo "Postgres does not support setting root password like MySQL does. Use env-database-user-password instead."
-          else
+          fi
           echo "COPY './test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
           echo 'RUN /docker-entrypoint.sh --help' >> ./test-db-tmp/Dockerfile
           echo 'FROM circleci/postgres:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
