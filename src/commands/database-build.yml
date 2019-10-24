@@ -23,7 +23,7 @@ parameters:
   database-schema:
     description: Path to the file describing the current schema (i.e ./db/db_test_dump.sql)
     type: string
-  ## -- Environment - 
+  ## -- Environment --
   env-database-name:
     description: Name of the database. If not set, docker image defaults will be used.
     type: string
