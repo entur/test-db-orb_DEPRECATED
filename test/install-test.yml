@@ -20,6 +20,16 @@ jobs:
           env-database-root-password: test-db-orb-root-password
           gcp-service-key: $DOCKER_PASSWORD
           gcr-registry: $DOCKER_REGISTRY
+#  test-use-db:
+#    docker:
+#      - image: circleci/openjdk:11.0.3-jdk-stretch
+#      #        |-----DOCKER_REGISTRY------|--reponame-|-------|-db--|-name-|
+#      - image: eu.gcr.io/entur-system-1287/test-db-orb-test-db-mysql-all_db:latest # NAME_YOUR_IMAGE is specified in jobs:build-test-db-postgres
+#        auth:
+#          username: $DOCKER_LOGIN
+#          password: $DOCKER_PASSWORD
+#    steps:
+#      - run: use mysql for something!
 workflows:
   version: 2.1
   main:
