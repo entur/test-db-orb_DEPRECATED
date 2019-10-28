@@ -52,14 +52,8 @@ parameters:
     type: string
     default: ""
   ## -- Docker --
-  gcr-namespace:
-    description: |
-      The `*.gcr.io` part in `*.gcr.io/[PROJECT_ID]`
-    type: string
-    default: ""
-  gcr-project:
-    description: |
-      The `{PROJECT_ID}` part in `*.gcr.io/[PROJECT_ID]`
+  gcr-registry:
+    description: The registry you want to use, typically `username/` or `eu.gcr.ui/project-id`
     type: string
     default: ""
   ## -- Config --
@@ -94,13 +88,15 @@ steps:
   - run:
       name: Check that Docker Registry is available
       command: |
-        DOCKER_REGISTRY_PARAM="<< parameters.gcr-namespace >>/<< parameters.gcr-project >>"
+        DOCKER_REGISTRY_PARAM="<< parameters.gcr-registry >>"
         if [[ -n "${DOCKER_REGISTRY_PARAM}" ]]; then
           echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY_PARAM" >> $BASH_ENV
           source $BASH_ENV
           echo "Using docker registry $DOCKER_REGISTRY, provided in parameters."
+        elif [[ -n "$DOCKER_REGISTRY" ]]; then
+          echo "Using docker registry $DOCKER_REGISTRY, provided in environment."
         else
-          echo "Must specify gcr-namespace and gcr-project"
+          echo "Must specify gcr-registry or provide an environment variable called $DOCKER_REGISTRY"
           exit 1
         fi
   - run:
@@ -123,7 +119,7 @@ steps:
       gcp-service-key: << parameters.gcp-service-key >>
   - run:
       name:
-      command: docker login -u _json_key --password-stdin https://<< parameters.gcr-namespace >> < ${HOME}/account-auth.json
+      command: docker login -u _json_key --password-stdin https://$DOCKER_REGISTRY < ${HOME}/account-auth.json
   - run:
       name: Set $TEST_DB_IMAGE_EXISTS:boolean
       command: |

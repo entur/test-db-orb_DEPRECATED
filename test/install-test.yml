@@ -2,7 +2,7 @@ version: 2.1
 
 #Include this in your config.yml
 #orbs:
-#  test-db: entur/test-db@dev:refactor-test-db # Use volatile if you always want the newest version.
+#  test-db: entur/test-db@0.0.1 # Use volatile if you always want the newest version.
 jobs:
   test-test-db-orb:
     executor: test-db/entur-cci-toolbox
@@ -19,9 +19,7 @@ jobs:
           env-database-user-password: test-db-orb-password
           env-database-root-password: test-db-orb-root-password
           gcp-service-key: $DOCKER_PASSWORD
-          gcr-namespace: eu.gcr.io
-          gcr-project: entur-system-1287
-      # next job, you can use
+          gcr-registry: $DOCKER_REGISTRY
 workflows:
   version: 2.1
   main:
