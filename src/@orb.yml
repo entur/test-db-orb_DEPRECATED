@@ -11,4 +11,7 @@ orbs:
 executors:
   entur-cci-toolbox:
     docker:
-      - image: entur/cci-toolbox:2.1
+      - image: entur/cci-toolbox:3.0
+        auth:
+          username: $DOCKERHUB_LOGIN
+          password: $DOCKERHUB_PASSWORD

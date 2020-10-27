@@ -21,6 +21,7 @@ orbs: # This makes the gcp-auth orb available in your config
 jobs:
   build-test-db-mysql:
     executor: test-db/entur-cci-toolbox
+    context: global
     steps:
       - test-db/database-build:
           image-name-suffix: schemaonly
@@ -35,10 +36,14 @@ jobs:
   run-with-test-db-mysql:
     docker:
       - image: circleci/golang:1.12 #select a base image suitable for your project
+        auth:
+          username: $DOCKERHUB_LOGIN
+          password: $DOCKERHUB_PASSWORD
       - image: gcr.io/project-id/YOUR_PROJECT_REPONAME-test-db-mysql-schemaonly:latest
         auth:
           username: $DOCKER_LOGIN
           password: $DOCKER_PASSWORD
+        context: global  
         environment:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: testdb
