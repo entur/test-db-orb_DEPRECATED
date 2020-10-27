@@ -1,7 +1,7 @@
 version: 2.1
 
 description: |
-  An orb for setting up test databases
+  An orb for setting up test databases.
   Made for Entur AS.
   Project homepage: https://github.com/entur/test-db-orb
 
