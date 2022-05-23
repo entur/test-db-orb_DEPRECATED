@@ -38,9 +38,9 @@ workflows:
             - run:
                 command: circleci config process uncompiled-config.yml > config.yml
                 name: compile test config
+            - run: git config --global --add safe.directory /tmp/_circleci_local_build_repo
             - run:
                 command: >-
-                  git config --global --add safe.directory /tmp/_circleci_local_build_repo
                   circleci local execute --env DOCKER_REGISTRY="${DOCKER_REGISTRY}" --env DOCKER_PASSWORD="${DOCKER_PASSWORD}" --env CIRCLE_PROJECT_REPONAME="$CIRCLE_PROJECT_REPONAME" -c config.yml | tee local_build_output.txt /dev/stderr |
                   tail -n 1 | grep "Success"
                 name: run test job locally
