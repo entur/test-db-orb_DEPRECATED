@@ -9,14 +9,12 @@ parameters:
     description: |
       Select a database type
 
-      mysql - https://hub.docker.com/r/circleci/mysql/tags
-      postgres - https://hub.docker.com/r/circleci/postgres/tags
-      #cassandra - https://hub.docker.com/r/circleci/cassandra/tags
+      mysql - https://hub.docker.com/r/cimg/mysql/tags
+      postgres - https://hub.docker.com/r/cimg/postgres/tags
     type: enum
     enum:
       - "mysql"
       - "postgres"
-      #- "cassandra"
   database-version:
     description: Select a valid tag from https://hub.docker.com/u/circleci
     type: string
@@ -38,17 +36,6 @@ parameters:
     default: ""
   env-database-root-password:
     description: Name of the root user, if applicable. If not set, docker image defaults will be used.
-    type: string
-    default: ""
-  ## -- GCP --
-  gcp-service-key:
-    description: |
-      The credentials for the Service Account to be used when communicating to Google Cloud.
-      If not provided, the command will look for the environment variable $GCLOUD_SERVICE_KEY
-
-      To obtain the key for this command,
-      use either the Google Cloud Platform Console or gcloud iam service-accounts keys create.
-      The key can be .json (preferred) or .p12 (legacy) format.
     type: string
     default: ""
   ## -- Docker --
@@ -115,11 +102,9 @@ steps:
         echo 'export TEST_DB_DOCKER_NAME_LATEST=${IMAGE_NAME}:latest' >> $BASH_ENV
         source $BASH_ENV
         echo $TEST_DB_DOCKER_NAME
-  - gcp-auth/authenticate-gcp:
-      gcp-service-key: << parameters.gcp-service-key >>
   - run:
       name:
-      command: docker login -u _json_key --password-stdin https://$DOCKER_REGISTRY < ${HOME}/account-auth.json
+      command: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_LOGIN}" --password-stdin "${DOCKER_REGISTRY}"
   - run:
       name: Set $TEST_DB_IMAGE_EXISTS:boolean
       command: |
@@ -137,7 +122,7 @@ steps:
       command: |
         if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [ '<< parameters.database-type >>' = 'mysql' ]; then
           touch ./test-db-tmp/Dockerfile
-          echo 'FROM circleci/mysql:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
+          echo 'FROM cimg/mysql:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
           echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"not running $@\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> ./test-db-tmp/Dockerfile
           echo "COPY './test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
           if [[ -n "<< parameters.env-database-name >>" ]]; then
@@ -153,7 +138,7 @@ steps:
             echo "ENV MYSQL_ROOT_PASSWORD=<< parameters.env-database-root-password >>" >> ./test-db-tmp/Dockerfile
           fi
           echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "mysqld", "--datadir", "/initialized-db"]' >> ./test-db-tmp/Dockerfile
-          echo 'FROM circleci/mysql:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
+          echo 'FROM cimg/mysql:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
           echo 'COPY --from=donor /initialized-db /var/lib/mysql' >> ./test-db-tmp/Dockerfile
           cat ./test-db-tmp/Dockerfile
           docker build -t $TEST_DB_DOCKER_NAME -t $TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
@@ -166,7 +151,7 @@ steps:
       command: |
         if [ "$TEST_DB_IMAGE_EXISTS" = false ] && [ '<< parameters.database-type >>' = 'postgres' ]; then
           touch ./test-db-tmp/Dockerfile
-          echo 'FROM circleci/postgres:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
+          echo 'FROM cimg/postgres:<< parameters.database-version >> as donor' >> ./test-db-tmp/Dockerfile
           echo 'ENV PGDATA=/pgdata' >> ./test-db-tmp/Dockerfile
           if [[ -n "<< parameters.env-database-name >>" ]]; then
             echo "ENV POSTGRES_DB=<< parameters.env-database-name >>" >> ./test-db-tmp/Dockerfile
@@ -182,7 +167,7 @@ steps:
           fi
           echo "COPY './test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
           echo 'RUN /docker-entrypoint.sh --help' >> ./test-db-tmp/Dockerfile
-          echo 'FROM circleci/postgres:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
+          echo 'FROM cimg/postgres:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
           echo 'ENV PGDATA=/pgdata' >> ./test-db-tmp/Dockerfile
           echo 'COPY --chown=postgres:postgres --from=donor /pgdata /pgdata' >> ./test-db-tmp/Dockerfile
           cat ./test-db-tmp/Dockerfile
