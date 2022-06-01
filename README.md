@@ -7,6 +7,7 @@ This orb is a utility orb for creating docker images (on GCR) with a database pr
 ## Requirements
 
 An executor that has `gcloud` pre-installed. One is available as `gcp-auth/entur-cci-toolbox`
+Add an env. variable <SERVICE_ACCOUNT_NAME> in your project in CircleCI.
 
 ## Usage
 
@@ -35,7 +36,7 @@ jobs:
           gcr-project: project-id
   run-with-test-db-mysql:
     docker:
-      - image: circleci/golang:1.12 #select a base image suitable for your project
+      - image: cimg/golang:1.12 #select a base image suitable for your project
         auth:
           username: $DOCKERHUB_LOGIN
           password: $DOCKERHUB_PASSWORD
