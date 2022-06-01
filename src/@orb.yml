@@ -5,8 +5,6 @@ description: |
   Made for Entur AS.
   Project homepage: https://github.com/entur/test-db-orb
 
-orbs:
-  gcp-auth: entur/gcp-auth@volatile
 
 executors:
   entur-cci-toolbox:
