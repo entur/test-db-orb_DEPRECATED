@@ -9,41 +9,6 @@ workflows:
       - orb-tools/pack:
           name: pack
           source-dir: src
-#      - orb-tools/test-in-builds:
-#          name: test
-#          orb-location: orb.yml
-#          orb-name: test-db
-#          context: global
-#          checkout: true
-#          workspace-root: .
-#          test-steps: # these happen after the initial test-in-builds
-#            #- run:
-#            #    name: Update PATH and Define Environment Variable at Runtime
-#            #    command: |
-#            #      echo 'export CLOUDSDK_CONTAINER_CLUSTER=${CLOUDSDK_CONTAINER_CLUSTER}' >> $BASH_ENV
-#            #      echo 'export GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}' >> $BASH_ENV
-#            #      echo 'export CLOUDSDK_COMPUTE_ZONE=${CLOUDSDK_COMPUTE_ZONE}' >> $BASH_ENV
-#            #      source $BASH_ENV
-#            # from https://circleci.com/orbs/registry/orb/circleci/orb-tools#commands-local-test-build
-#            - run: mkdir -p tmp-config-src
-#            - run: cp test/install-test.yml tmp-config-src/config.yml
-#            - orb-tools/pack:
-#                destination: uncompiled-config.yml
-#                source: tmp-config-src
-#            - run: cat uncompiled-config.yml
-#            - run:
-#                command: circleci config process uncompiled-config.yml > config.yml
-#                name: compile test config
-#            - run:
-#                command: |
-#                  #git config --global --add safe.directory /tmp/_circleci_local_build_repo
-#                  circleci local execute --env DOCKER_REGISTRY="${DOCKER_REGISTRY}" --env DOCKER_PASSWORD="${DOCKER_PASSWORD}" --env CIRCLE_PROJECT_REPONAME="$CIRCLE_PROJECT_REPONAME" -c config.yml | tee local_build_output.txt /dev/stderr |
-#                  tail -n 1 | grep "Success"
-#                name: run test job locally
-#          requires:
-#            # - publish
-#            - lint
-#            - pack
       - orb-tools/publish:
           circleci-token: CIRCLE_API_USER_TOKEN
           name: publish
@@ -51,7 +16,7 @@ workflows:
           filters:
             branches:
               ignore: master
-          orb-name: test-db
+          orb-name: entur/test-db
           vcs-type: gh
           requires:
             - pack
