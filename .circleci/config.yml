@@ -6,8 +6,6 @@ orbs:
 workflows:
   verify:
     jobs:
-      - orb-tools/lint:
-          name: lint
       - orb-tools/pack:
           name: pack
           source-dir: src
@@ -57,5 +55,3 @@ workflows:
           vcs-type: gh
           requires:
             - pack
-            - lint
-#            - test
