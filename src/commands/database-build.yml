@@ -168,10 +168,18 @@ steps:
             echo "Postgres does not support setting root password like MySQL does. Use env-database-user-password instead."
           fi
           echo "COPY './test-db-tmp/${DATABASE_FILE_CHECKSUM}.sql' /docker-entrypoint-initdb.d/" >> ./test-db-tmp/Dockerfile
-          echo 'RUN /docker-entrypoint.sh --help' >> ./test-db-tmp/Dockerfile
-          echo 'FROM cimg/postgres:<< parameters.database-version >>' >> ./test-db-tmp/Dockerfile
-          echo 'ENV PGDATA=/pgdata' >> ./test-db-tmp/Dockerfile
-          echo 'COPY --chown=postgres:postgres --from=donor /pgdata /pgdata' >> ./test-db-tmp/Dockerfile
+          # do not start postgres deamon
+          echo 'RUN ["sed", "-i", "s/exec \"$@\"/echo \"skipping...\"/", "/usr/local/bin/docker-entrypoint.sh"]' >> ./test-db-tmp/Dockerfile
+          # suppress missing conf
+          echo 'RUN mkdir -p /var/lib/postgresql/data' >> ./test-db-tmp/Dockerfile
+          echo 'RUN touch /var/lib/postgresql/data/postgresql.conf' >> ./test-db-tmp/Dockerfile
+          echo 'RUN chown postgres:postgres /var/lib/postgresql/data/postgresql.conf' >> ./test-db-tmp/Dockerfile
+          # run entrypoint to generate pgdata
+          echo 'RUN ["/usr/local/bin/docker-entrypoint.sh", "postgres"]' >> ./test-db-tmp/Dockerfile
+
+          echo 'FROM cimg/postgres:14.4' >> ./test-db-tmp/Dockerfile
+          echo 'COPY --chown=postgres:postgres --from=donor /pgdata $PGDATA' >> ./test-db-tmp/Dockerfile
+
           cat ./test-db-tmp/Dockerfile
           docker build -t $TEST_DB_DOCKER_NAME -t $TEST_DB_DOCKER_NAME_LATEST -f ./test-db-tmp/Dockerfile .
           rm -rf ./test-db-tmp
