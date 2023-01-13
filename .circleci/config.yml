@@ -11,12 +11,10 @@ workflows:
       - orb-tools/pack:
           name: pack
           source-dir: src
-          attach-workspace: true
 #      - orb-tools/test-in-builds:
 #          name: test
 #          orb-location: orb.yml
 #          orb-name: test-db
-#          attach-workspace: true
 #          context: global
 #          checkout: true
 #          workspace-root: .
@@ -55,25 +53,9 @@ workflows:
           filters:
             branches:
               ignore: master
-          checkout: false
-          attach-workspace: true
-          workspace-root: .
-          orb-path: orb.yml
-          orb-ref: entur/test-db@dev:$CIRCLE_BRANCH
+          orb-name: test-db
+          vcs-type: gh
           requires:
             - pack
             - lint
-#            - test
-      - orb-tools/increment:
-          name: release
-          context: global
-          filters:
-            branches:
-              only: master
-          checkout: false
-          attach-workspace: true
-          orb-ref: entur/test-db
-          requires:
-            - lint
-            - pack
 #            - test
