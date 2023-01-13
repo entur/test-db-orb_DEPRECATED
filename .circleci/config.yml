@@ -12,6 +12,7 @@ workflows:
       - orb-tools/publish:
           circleci-token: CIRCLE_API_USER_TOKEN
           name: publish
+          enable-pr-comment: false
           context: global
           filters:
             branches:
