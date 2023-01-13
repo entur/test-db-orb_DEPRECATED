@@ -49,7 +49,7 @@ workflows:
 #            - lint
 #            - pack
       - orb-tools/publish:
-          circle-token: CIRCLE_API_USER_TOKEN
+          circleci-token: CIRCLE_API_USER_TOKEN
           name: publish
           context: global
           filters:
