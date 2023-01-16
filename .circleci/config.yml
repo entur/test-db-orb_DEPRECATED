@@ -14,9 +14,6 @@ workflows:
           name: publish
           enable-pr-comment: false
           context: global
-          filters:
-            branches:
-              only: master
           orb-name: entur/test-db
           vcs-type: gh
           requires:
