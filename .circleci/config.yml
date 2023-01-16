@@ -16,7 +16,7 @@ workflows:
           context: global
           filters:
             branches:
-              ignore: master
+              only: master
           orb-name: entur/test-db
           vcs-type: gh
           requires:
