@@ -107,7 +107,6 @@ steps:
       command: |
         echo "${DOCKER_PASSWORD}" > keyfile.json
         gcloud auth activate-service-account "${SERVICE_ACCOUNT_NAME}" --key-file=keyfile.json
-
   - run:
       name: Set $TEST_DB_IMAGE_EXISTS:boolean
       command: |
