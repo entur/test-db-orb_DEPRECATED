@@ -192,7 +192,6 @@ steps:
       command: |
         echo "${DOCKER_PASSWORD}" > keyfile.json
         gcloud auth activate-service-account "${SERVICE_ACCOUNT_NAME}" --key-file=keyfile.json
-        docker login -u _json_key --password-stdin https://eu.gcr.io < keyfile.json
         if [ "$TEST_DB_IMAGE_EXISTS" = false ] ; then
           docker push $TEST_DB_DOCKER_NAME
           docker push $TEST_DB_DOCKER_NAME_LATEST
