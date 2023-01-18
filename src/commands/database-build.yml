@@ -112,18 +112,6 @@ steps:
       command: |
         echo 'export EXISTING_TAG_FOR_IMAGE=$(gcloud container images list-tags --filter="tags:$DATABASE_FILE_CHECKSUM" --format=json $IMAGE_NAME)' >> $BASH_ENV
 
-        echo "test_start"
-        echo "check $DATABASE_FILE_CHECKSUM"
-        echo $DATABASE_FILE_CHECKSUM
-
-        echo "check $IMAGE_NAME"
-        echo $IMAGE_NAME
-        echo "check ${DATABASE_FILE_CHECKSUM}"
-        echo ${DATABASE_FILE_CHECKSUM}
-        echo "check variable EXISTING_TAG_FOR_IMAGE":
-        echo $EXISTING_TAG_FOR_IMAGE
-        echo "test_end"
-
         if [[ "$EXISTING_TAG_FOR_IMAGE" == "[]" ]]; then
           echo 'Image does not exist. Continue building'
           echo 'export TEST_DB_IMAGE_EXISTS=false' >> $BASH_ENV
@@ -204,15 +192,6 @@ steps:
       command: |
         echo "${DOCKER_PASSWORD}" > keyfile.json
         gcloud auth activate-service-account "${SERVICE_ACCOUNT_NAME}" --key-file=keyfile.json
-
-        echo "check variable EXISTING_TAG_FOR_IMAGE":
-        echo $EXISTING_TAG_FOR_IMAGE
-
-        echo "test TEST_DB_DOCKER_NAME":
-        echo $TEST_DB_DOCKER_NAME
-
-        echo "test TEST_DB_IMAGE_EXISTS":
-        echo $TEST_DB_IMAGE_EXISTS
 
         if [ "$TEST_DB_IMAGE_EXISTS" = false ] ; then
           docker push $TEST_DB_DOCKER_NAME
