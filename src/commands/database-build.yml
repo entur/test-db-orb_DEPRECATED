@@ -111,6 +111,12 @@ steps:
       name: Set $TEST_DB_IMAGE_EXISTS:boolean
       command: |
         EXISTING_TAG_FOR_IMAGE=$(gcloud container images list-tags --filter="tags:$DATABASE_FILE_CHECKSUM" --format=json $IMAGE_NAME)
+        wait 10
+        echo "check variable EXISTING_TAG_FOR_IMAGE":
+        echo $EXISTING_TAG_FOR_IMAGE
+        echo "check gcloud images list command":
+        gcloud container images list-tags eu.gcr.io/entur-system-1287/products-test-db-postgres-full-db
+
         if [[ "$EXISTING_TAG_FOR_IMAGE" == "[]" ]]; then
           echo 'Image does not exist. Continue building'
           echo 'export TEST_DB_IMAGE_EXISTS=false' >> $BASH_ENV
@@ -191,6 +197,13 @@ steps:
       command: |
         echo "${DOCKER_PASSWORD}" > keyfile.json
         gcloud auth activate-service-account "${SERVICE_ACCOUNT_NAME}" --key-file=keyfile.json
+        
+        echo "check variable EXISTING_TAG_FOR_IMAGE":
+        echo $EXISTING_TAG_FOR_IMAGE
+        echo "check gcloud images list command":
+        gcloud container images list-tags eu.gcr.io/entur-system-1287/products-test-db-postgres-full-db
+        
+        echo $TEST_DB_DOCKER_NAME
         if [ "$TEST_DB_IMAGE_EXISTS" = false ] ; then
           docker push $TEST_DB_DOCKER_NAME
           docker push $TEST_DB_DOCKER_NAME_LATEST
