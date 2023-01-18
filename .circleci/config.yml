@@ -11,27 +11,10 @@ workflows:
           source-dir: src
       - orb-tools/publish:
           circleci-token: CIRCLE_API_USER_TOKEN
-          name: publish-dev
+          name: publish
           enable-pr-comment: false
           context: global
-          filters:
-            branches:
-              ignore: master
           orb-name: entur/test-db
-          pub-type: dev
-          vcs-type: gh
-          requires:
-            - pack
-      - orb-tools/publish:
-          circleci-token: CIRCLE_API_USER_TOKEN
-          name: publish-prod
-          enable-pr-comment: false
-          context: global
-          filters:
-            branches:
-              only: master
-          orb-name: entur/test-db
-          pub-type: production
           vcs-type: gh
           requires:
             - pack
