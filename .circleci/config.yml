@@ -15,6 +15,13 @@ workflows:
           enable-pr-comment: false
           context: global
           orb-name: entur/test-db
+          filters:
+            tags:
+              only:
+                - /v*/
+            branches:
+              ignore:
+                - /.*/
           vcs-type: gh
           requires:
             - pack
